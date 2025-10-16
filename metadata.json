@@ -1,0 +1,5 @@
+{
+  "name": "Copy of German Noun Gender pH Meter",
+  "description": "An application that analyzes text, translates it to German, and visualizes the ratio of masculine to feminine nouns on a pH-like scale to make learning German genders fun.",
+  "requestFramePermissions": []
+}
