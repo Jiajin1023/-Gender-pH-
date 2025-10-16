@@ -1,26 +1,116 @@
 
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ja">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ドイツ語の名詞ジェンダーpHメーター</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-  <script type="importmap">
-{
-  "imports": {
-    "react-dom/": "https://aistudiocdn.com/react-dom@^19.1.1/",
-    "react/": "https://aistudiocdn.com/react@^19.1.1/",
-    "react": "https://aistudiocdn.com/react@^19.1.1",
-    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.20.0"
-  }
-}
-</script>
-<link rel="stylesheet" href="/index.css">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>ドイツ語の名詞ジェンダー pHメーター（静的デモ版）</title>
+<meta name="description" content="0円で動く、完全フロントエンドのデモ。入力されたドイツ語テキストから der/die/das の頻度を数え、pH 1–14 にマッピングして可視化します。">
+<style>
+  :root{--bg:#0b1220;--fg:#e6ebf5;--muted:#9fb3d9;--card:#111a2a;--line:#23314c;--accent:#3b82f6}
+  *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial}
+  .wrap{max-width:980px;margin:auto;padding:28px 18px}
+  h1{font-size:clamp(24px,4vw,36px);margin:0 0 8px}
+  p{margin:6px 0 14px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px}
+  textarea{width:100%;min-height:150px;background:#0f1727;color:var(--fg);border:1px solid var(--line);border-radius:12px;padding:12px;resize:vertical}
+  button{background:var(--accent);color:#fff;border:none;border-radius:12px;padding:12px 18px;font-weight:700;cursor:pointer}
+  .row{display:grid;gap:16px;grid-template-columns:1.2fr .8fr}
+  @media(max-width:860px){.row{grid-template-columns:1fr}}
+  .meter{height:16px;border-radius:999px;background:linear-gradient(90deg,#ef4444,#f59e0b,#eab308,#84cc16,#22c55e,#10b981,#06b6d4,#3b82f6,#8b5cf6,#a855f7);
+         position:relative;border:1px solid var(--line)}
+  .needle{position:absolute;top:-6px;width:2px;height:28px;background:#fff;border-radius:1px}
+  .kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
+  .kpis .card{padding:10px;text-align:center}
+  footer{opacity:.7;margin-top:28px}
+  a{color:var(--muted)}
+</style>
 </head>
-  <body class="bg-slate-50 text-slate-800">
-    <div id="root"></div>
-    <script type="module" src="/index.tsx"></script>
-  </body>
+<body>
+  <div class="wrap">
+    <header style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+      <div><strong>Gender pH Meter</strong>（静的デモ・0円運用）</div>
+      <nav><a href="#how">使い方</a> · <a href="#policy">ポリシー</a></nav>
+    </header>
+
+    <section class="card">
+      <h1>ドイツ語の名詞ジェンダーを pH で可視化</h1>
+      <p>このデモは <b>APIやサーバを一切使いません</b>。ブラウザ内だけで <code>der/die/das</code> の出現数を数えて
+        pH 1（男性寄り）〜14（女性寄り）にマッピングします。中性（das）は比率指標に影響させず、別カウントで表示します。</p>
+
+      <div class="row">
+        <div class="card" style="background:#0f1727">
+          <label for="txt">ドイツ語テキストを入力</label>
+          <textarea id="txt" placeholder="例）Ich habe heute eine Bergwanderung gemacht."></textarea>
+          <div style="display:flex;gap:10px;margin-top:10px;align-items:center">
+            <button id="run">分析する</button>
+            <small style="opacity:.75">※ 和文→独訳は未搭載（0円運用のため）。独文を貼ってください。</small>
+          </div>
+        </div>
+
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <strong>pH</strong> <span id="phLabel">–</span>
+          </div>
+          <div class="meter" id="meter"><div class="needle" id="needle" style="left:0%"></div></div>
+          <div class="kpis">
+            <div class="card"><div>der（男）</div><div id="cDer" style="font-size:20px">0</div></div>
+            <div class="card"><div>die（女）</div><div id="cDie" style="font-size:20px">0</div></div>
+            <div class="card"><div>das（中）</div><div id="cDas" style="font-size:20px">0</div></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="how" class="card" style="margin-top:14px">
+      <h2>使い方</h2>
+      <ol>
+        <li>独文を貼る（記事・字幕・学習文など）</li>
+        <li>「分析する」を押す</li>
+        <li>der/die/das の頻度から pH を表示</li>
+      </ol>
+      <p style="opacity:.8">pH の計算：pH = 1 + 13 × ( die / (der + die) )。中性 das は別枠で表示。</p>
+    </section>
+
+    <section id="policy" class="card">
+      <h2>ポリシー（デモ版）</h2>
+      <ul>
+        <li>入力テキストはブラウザ内のみで処理・保存しません。</li>
+        <li>学習・教育用途の参考デモです。厳密な文法解析や語彙変化は扱っていません。</li>
+        <li>本格版（翻訳や高精度解析あり）は開発中。公開先はトップページで告知します。</li>
+      </ul>
+    </section>
+
+    <footer>© 2025 Your Name · <a href="https://github.com/jiajin1023">GitHub</a></footer>
+  </div>
+
+<script>
+  const byWord = w => new RegExp(`\\b${w}\\b`, 'gi'); // 単語境界でカウント
+  function count(word, text){ const m = text.match(byWord(word)); return m ? m.length : 0; }
+
+  function analyze(){
+    const t = (document.getElementById('txt').value || '').normalize('NFC');
+    const der = count('der', t);
+    const die = count('die', t);
+    const das = count('das', t);
+
+    // pH: 男性(1)〜女性(14)。中性は独立表示。
+    const base = der + die;
+    const femaleRatio = base ? die / base : 0.5; // ベースが0なら中庸
+    const ph = +(1 + 13 * femaleRatio).toFixed(2);
+
+    // UI反映
+    document.getElementById('cDer').textContent = der;
+    document.getElementById('cDie').textContent = die;
+    document.getElementById('cDas').textContent = das;
+    document.getElementById('phLabel').textContent = ph;
+
+    const percent = ((ph - 1) / 13) * 100; // 1→0%, 14→100%
+    document.getElementById('needle').style.left = `calc(${percent}% - 1px)`;
+  }
+
+  document.getElementById('run').addEventListener('click', analyze);
+</script>
+</body>
 </html>
+
