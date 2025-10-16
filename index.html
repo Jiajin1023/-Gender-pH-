@@ -4,8 +4,8 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>ドイツ語の名詞ジェンダー pHメーター（静的デモ版）</title>
-<meta name="description" content="0円で動く、完全フロントエンドのデモ。入力されたドイツ語テキストから der/die/das の頻度を数え、pH 1–14 にマッピングして可視化します。">
+<title>ドイツ語の名詞ジェンダー pHメーター（日本語→自動翻訳→分析・0円）</title>
+<meta name="description" content="日本語を貼るだけでGoogle Apps Scriptを使って無料枠でドイツ語へ翻訳し、der/die/dasの比率からpH 1–14で可視化します。">
 <style>
   :root{--bg:#0b1220;--fg:#e6ebf5;--muted:#9fb3d9;--card:#111a2a;--line:#23314c;--accent:#3b82f6}
   *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial}
@@ -24,32 +24,42 @@
   .kpis .card{padding:10px;text-align:center}
   footer{opacity:.7;margin-top:28px}
   a{color:var(--muted)}
+  small.hint{opacity:.75}
 </style>
 </head>
 <body>
   <div class="wrap">
     <header style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-      <div><strong>Gender pH Meter</strong>（静的デモ・0円運用）</div>
+      <div><strong>Gender pH Meter</strong>（日本語OK・0円運用）</div>
       <nav><a href="#how">使い方</a> · <a href="#policy">ポリシー</a></nav>
     </header>
 
     <section class="card">
-      <h1>ドイツ語の名詞ジェンダーを pH で可視化</h1>
-      <p>このデモは <b>APIやサーバを一切使いません</b>。ブラウザ内だけで <code>der/die/das</code> の出現数を数えて
-        pH 1（男性寄り）〜14（女性寄り）にマッピングします。中性（das）は比率指標に影響させず、別カウントで表示します。</p>
+      <h1>日本語を貼るだけで OK。<br>ドイツ語の名詞ジェンダーを pH で可視化</h1>
+      <p>日本語 → <b>Google Apps Script（無料枠）</b> でドイツ語へ翻訳 → der/die/das の頻度から pH 1–14 にマッピングして表示します。</p>
 
       <div class="row">
+        <!-- 日本語入力 -->
         <div class="card" style="background:#0f1727">
-          <label for="txt">ドイツ語テキストを入力</label>
-          <textarea id="txt" placeholder="例）Ich habe heute eine Bergwanderung gemacht."></textarea>
-          <div style="display:flex;gap:10px;margin-top:10px;align-items:center">
-            <button id="run">分析する</button>
-            <small style="opacity:.75">※ 和文→独訳は未搭載（0円運用のため）。独文を貼ってください。</small>
+          <label for="txtJa">日本語テキスト（ここだけでOK）</label>
+          <textarea id="txtJa" placeholder="例）今日は山へハイキングに行きました。本文をここに貼ります。"></textarea>
+          <div style="display:flex;gap:10px;margin-top:10px;align-items:center;flex-wrap:wrap">
+            <button id="run">日本語から分析する</button>
+            <small class="hint">※ 無料枠の制限に当たった時はエラー表示。手動で独訳を貼れば分析だけは可能です。</small>
           </div>
         </div>
 
+        <!-- ドイツ語入力＋結果 -->
         <div class="card">
-          <div style="display:flex;justify-content:space-between;align-items:center">
+          <label for="txtDe"><b>ドイツ語テキスト</b>（直接貼ってもOK）</label>
+          <textarea id="txtDe" placeholder="例）Ich habe heute eine Bergwanderung gemacht."></textarea>
+
+          <div style="display:flex;gap:10px;margin-top:10px;align-items:center">
+            <button id="analyzeOnly">ドイツ語を分析</button>
+            <small class="hint">※ 直接ドイツ語だけで分析する場合はこちら。</small>
+          </div>
+
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:14px">
             <strong>pH</strong> <span id="phLabel">–</span>
           </div>
           <div class="meter" id="meter"><div class="needle" id="needle" style="left:0%"></div></div>
@@ -65,81 +75,82 @@
     <section id="how" class="card" style="margin-top:14px">
       <h2>使い方</h2>
       <ol>
-        <li>独文を貼る（記事・字幕・学習文など）</li>
-        <li>「分析する」を押す</li>
-        <li>der/die/das の頻度から pH を表示</li>
+        <li>左の日本語欄に本文を貼る</li>
+        <li>「日本語から分析する」をクリック（自動翻訳→右欄へ反映）</li>
+        <li>pHメーターとカウントが表示されます</li>
       </ol>
-      <p style="opacity:.8">pH の計算：pH = 1 + 13 × ( die / (der + die) )。中性 das は別枠で表示。</p>
+      <p class="hint">pH = 1 + 13 × ( die / (der + die) )。das は別カウント。</p>
     </section>
 
     <section id="policy" class="card">
-      <h2>ポリシー（デモ版）</h2>
+      <h2>ポリシー（デモ）</h2>
       <ul>
-        <li>入力テキストはブラウザ内のみで処理・保存しません。</li>
-        <li>学習・教育用途の参考デモです。厳密な文法解析や語彙変化は扱っていません。</li>
-        <li>本格版（翻訳や高精度解析あり）は開発中。公開先はトップページで告知します。</li>
+        <li>テキストは翻訳API（あなたのGAS）に送信されます。個人情報の入力は避けてください。</li>
+        <li>無料枠の制限に達すると翻訳は失敗しますが、右欄に独文を貼れば分析は可能です。</li>
       </ul>
     </section>
 
-    <footer>© 2025 Your Name · <a href="https://github.com/jiajin1023">GitHub</a></footer>
+    <footer>© 2025 Your Name</footer>
   </div>
 
-
-  
 <script>
-  const byWord = w => new RegExp(`\\b${w}\\b`, 'gi'); // 単語境界でカウント
-  function count(word, text){ const m = text.match(byWord(word)); return m ? m.length : 0; }
+  // ▼▼▼ ここに「ウェブアプリとしてデプロイ」した Apps Script の exec URL を入れてください ▼▼▼
+  const TRANSLATE_API_URL = 'PUT_YOUR_GAS_EXEC_URL_HERE'; // 例: https://script.google.com/macros/s/XXXX/exec
 
-  function analyze(){
-    const t = (document.getElementById('txt').value || '').normalize('NFC');
-    const der = count('der', t);
-    const die = count('die', t);
-    const das = count('das', t);
+  // 単語境界でカウント
+  const countWord = (w, t) => ((t.match(new RegExp(`\\b${w}\\b`, 'gi')))||[]).length;
 
-    // pH: 男性(1)〜女性(14)。中性は独立表示。
+  function renderFromText(t) {
+    const der = countWord('der', t);
+    const die = countWord('die', t);
+    const das = countWord('das', t);
     const base = der + die;
-    const femaleRatio = base ? die / base : 0.5; // ベースが0なら中庸
+    const femaleRatio = base ? die / base : 0.5;
     const ph = +(1 + 13 * femaleRatio).toFixed(2);
-
-    // UI反映
     document.getElementById('cDer').textContent = der;
     document.getElementById('cDie').textContent = die;
     document.getElementById('cDas').textContent = das;
     document.getElementById('phLabel').textContent = ph;
-
-    const percent = ((ph - 1) / 13) * 100; // 1→0%, 14→100%
+    const percent = ((ph - 1) / 13) * 100;
     document.getElementById('needle').style.left = `calc(${percent}% - 1px)`;
   }
 
-  document.getElementById('run').addEventListener('click', analyze);
-
-  
   async function translateJaToDe(ja) {
-    const url = '<<ここにあなたのApps ScriptのURL>>' + '?q=' + encodeURIComponent(ja);
+    // 簡易キャッシュ（同じ文はlocalStorageから復元）
+    const key = 'cache:' + ja.trim();
+    const cached = localStorage.getItem(key);
+    if (cached) return cached;
+    const url = TRANSLATE_API_URL + '?q=' + encodeURIComponent(ja);
     const res = await fetch(url, { method: 'GET' });
+    if (!res.ok) throw new Error('API error');
     const json = await res.json();
-    if (json && json.text) return json.text;
-    throw new Error('Translate failed');
+    if (!json || !json.text) throw new Error('Bad response');
+    localStorage.setItem(key, json.text);
+    return json.text;
   }
 
-  // 「分析する」を押したときの挙動を上書き：
+  // 日本語→翻訳→右欄へ→分析
   document.getElementById('run').addEventListener('click', async () => {
-    const jaEl = document.getElementById('txtJa');   // 日本語欄
-    const deEl = document.getElementById('txtDe');   // ドイツ語欄
+    const ja = (document.getElementById('txtJa').value || '').trim();
+    const deEl = document.getElementById('txtDe');
+    if (!ja) { alert('日本語テキストを入力してください'); return; }
     try {
-      if (jaEl && jaEl.value.trim()) {
-        // 日本語があれば自動翻訳 → ドイツ語欄へ → 分析
-        deEl.value = '翻訳中…';
-        const de = await translateJaToDe(jaEl.value.trim());
-        deEl.value = de;
-      }
-      analyze();  // 既存の関数（txtDeを読んでpH計算）
-    } catch (e) {
-      alert('翻訳に失敗しました。しばらくして再試行するか、外部翻訳タブをご利用ください。');
+      deEl.value = '翻訳中…';
+      const de = await translateJaToDe(ja);
+      deEl.value = de;
+      renderFromText(de);
+    } catch(e) {
+      deEl.value = '';
+      alert('翻訳に失敗しました（無料枠の上限など）。右欄にドイツ語を貼れば分析できます。');
     }
   });
 
+  // 右欄のドイツ語だけで分析
+  document.getElementById('analyzeOnly').addEventListener('click', () => {
+    const de = (document.getElementById('txtDe').value || '').normalize('NFC');
+    if (!de.trim()) { alert('ドイツ語テキストを入力してください'); return; }
+    renderFromText(de);
+  });
 </script>
 </body>
 </html>
-
